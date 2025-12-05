@@ -1,62 +1,30 @@
 services:
-  shortfy-app:
-    image: shortfy-image
-
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runner
-
-    ports:
-      - "3030:3000"
-
-    restart: unless-stopped
-
   db:
     # Usa a imagem oficial do PostgreSQL
     image: postgres:16-alpine
 
     # Nome do contêiner para facilitar a referência
     container_name: shortfy-database
+    restart: unless-stopped
 
     # Variáveis de ambiente para configurar o banco de dados
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_USER: shortfy
+      POSTGRES_PASSWORD: shortfy123
+      POSTGRES_DB: shortfy_db
 
-    # Mapeamento de portas para acessar o banco de dados do seu host
-    # Opcional, mas útil para acessar com ferramentas como o DBeaver
     ports:
       - "5432:5432"
 
-    # The commented out section below is an example of how to define a PostgreSQL
-    # database that your application can use. `depends_on` tells Docker Compose to
-    # start the database before your application. The `db-data` volume persists the
-    # database data between container restarts. The `db-password` secret is used
-    # to set the database password. You must create `db/password.txt` and add
-    # a password of your choosing to it before running `docker compose up`.
-    #     depends_on:
-    #       db:
-    #         condition: service_healthy
-    #   db:
-    #     image: postgres
-    #     restart: always
-    #     user: postgres
-    #     secrets:
-    #       - db-password
-    #     volumes:
-    #       - db-data:/var/lib/postgresql/data
-    #     environment:
-    #       - POSTGRES_DB=example
-    #       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
-    #     expose:
-    #       - 5432
-    #     healthcheck:
-    #       test: [ "CMD", "pg_isready" ]
-    #       interval: 10s
-    #       timeout: 5s
-    #       retries: 5
-    # volumes:
-    #   db-data:
-    # secrets:
-    #   db-password:
-    #     file: db/password.txt
+    # Declarar volumes para persistencia do db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shortfy -d shortfy_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

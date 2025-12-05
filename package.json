@@ -6,11 +6,19 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "eslint"
+		"lint": "eslint",
+		"db:start": "docker-compose up -d db",
+		"db:stop": "docker-compose down",
+		"db:logs": "docker-compose logs -f db",
+		"db:restart": "docker-compose restart db",
+		"prisma:generate": "prisma generate",
+		"prisma:migrate": "prisma migrate dev",
+		"prisma:push": "prisma db push",
+		"prisma:studio": "prisma studio"
 	},
 	"dependencies": {
 		"@prisma/adapter-pg": "^7.0.1",
-		"@prisma/client": "^7.0.1",
+		"@prisma/client": "5.22.0",
 		"bcrypt": "^6.0.0",
 		"next": "16.0.5",
 		"pg": "^8.16.3",
@@ -27,7 +35,7 @@
 		"dotenv": "^17.2.3",
 		"eslint": "^9",
 		"eslint-config-next": "16.0.5",
-		"prisma": "^7.0.1",
+		"prisma": "5.22.0",
 		"tailwindcss": "^4",
 		"typescript": "^5"
 	},

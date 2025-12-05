@@ -1,47 +1,70 @@
 ## Etapa 1 - Construção
+FROM node:20-alpine AS builder
 
-# usa uma imagem base com node e ferramentas de build
-FROM node:20-alpine as builder
-
-# comando para habilitar o uso do pnpm, yarn e npm. O corepack é um gerenciador de gerenciadores de pacotes. Se fosse usar o npm não seria necessário
+# Habilita pnpm
 RUN corepack enable
 
-# define diretório de trabalho (pasta raiz)
+# Define diretório de trabalho
 WORKDIR /shortfy-app
 
-# copia as dependências a serem instaladas no projeto pelo pnpm
-COPY pnpm-lock.yaml package.json ./
+# Copia arquivos de dependências
+COPY package.json pnpm-lock.yaml ./
 
-# roda a instalação da dependências (dev e prod) no container
-RUN pnpm install
+# Copia schema do Prisma (necessário para gerar o client)
+COPY prisma ./prisma/
 
-# copia todo o conteúdo do projeto, menos o que está no dockerignore
+# Instala dependências
+RUN pnpm install --frozen-lockfile
+
+# Copia o restante do código
 COPY . .
 
-# roda o script de build
+# Gera o Prisma Client
+RUN npx prisma generate
+
+# Build da aplicação
 RUN pnpm build
 
 
 ## Etapa 2 - Execução
-FROM node:20-alpine as runner
+FROM node:20-alpine AS runner
 
-# habilita o corepack para usar pnpm (necessário novamente pois é uma nova imagem)
+# Habilita pnpm
 RUN corepack enable
 
-# define diretório de trabalho para runner (pasta raiz)
+# Define diretório de trabalho
 WORKDIR /shortfy-app
 
+# Define usuário não-root para segurança
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# instala somente somente as dependencias de produção
-COPY --from=builder /shortfy-app/package.json ./package.json
-COPY --from=builder /shortfy-app/pnpm-lock.yaml ./pnpm-lock.yaml
+# Copia dependências de produção
+COPY --from=builder /shortfy-app/package.json ./
+COPY --from=builder /shortfy-app/pnpm-lock.yaml ./
+
+# Copia schema e migrations do Prisma
+COPY --from=builder /shortfy-app/prisma ./prisma/
+
+# Instala apenas dependências de produção
 RUN pnpm install --prod --frozen-lockfile
 
-# Copia os arquivos de produção do estágio "builder"
-COPY --from=builder /shortfy-app/.next ./.next
-COPY --from=builder /shortfy-app/public ./public
+# Gera Prisma Client novamente (necessário na imagem de produção)
+RUN npx prisma generate
 
-# expoe a porta de acesso ao container (a porta 3000 é a padrão no next, mas pode ser outra porta se necessário, que deve ser configurada no next.config.ts)
-EXPOSE 3030
+# Copia build do Next.js
+COPY --from=builder --chown=nextjs:nodejs /shortfy-app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /shortfy-app/public ./public
 
-CMD ["pnpm", "start"]
+# Muda para usuário não-root
+USER nextjs
+
+# Expõe porta
+EXPOSE 3000
+
+# Variável de ambiente para porta
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Script de inicialização que roda migrations antes de iniciar
+CMD npx prisma migrate deploy && pnpm start

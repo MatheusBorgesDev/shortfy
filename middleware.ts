@@ -62,5 +62,7 @@ export function middleware(request: NextRequest) {
 // essa função é muito importante para desempenho, pois serve para designar todas as rotas que o middleware vai interceptar
 // nesse caso não vai ter influência em arquivos estáticos, como CSS, JS e imagens
 export const config = {
-	matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+	matcher: [
+		"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+	],
 };

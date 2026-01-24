@@ -1,3 +1,7 @@
 export default function Home() {
-	return <h1>Shortfy</h1>;
+	return (
+		<div className="bg-black text-white h-svh">
+			<h1>Shortfy</h1>
+		</div>
+	);
 }

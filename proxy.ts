@@ -18,12 +18,12 @@ function matchesPattern(pathname: string, routesPrefix: string[]): boolean {
 	return routesPrefix.some((routesPrefix) => pathname.startsWith(routesPrefix));
 }
 
-// estrutura igual a uma rota api comum, sendo uma função que recebe a request e retorna uma next response
-export function middleware(request: NextRequest) {
+// o middleware é uma função que recebe a request e retorna uma next response
+export function proxy(request: NextRequest) {
 	// primeiro é preciso pegar o token dos cookies
 	const token = request.cookies.get("token");
 
-	// verificar se o token tem conteúdo e se esse conteúdo tem formato válido de token, retorna um boolean
+	// verificar se o token tem conteúdo e se esse conteúdo tem formato válido de token
 	// a função verifyToken retorna um JWTPayload ou null
 	const isAuthenticated = token ? verifyToken(token.value) !== null : false;
 

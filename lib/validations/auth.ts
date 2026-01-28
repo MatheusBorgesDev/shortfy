@@ -30,3 +30,16 @@ export const registerSchema = z.object({
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
+
+export const createUrlSchema = z.object({
+	originalUrl: z
+		.string()
+		.min(1, "URL é obrigatória")
+		.url("URL inválida")
+		.refine(
+			(url) => url.startsWith("http://") || url.startsWith("https://"),
+			"URL deve começar com http:// ou https://",
+		),
+});
+
+export type CreateUrlData = z.infer<typeof createUrlSchema>;

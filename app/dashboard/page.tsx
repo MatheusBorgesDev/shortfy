@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -12,77 +11,34 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-
-type User = {
-	id: number;
-	userName: string;
-	email: string;
-	createdAt: string;
-	updatedAt: string;
-};
-
-type Url = {
-	id: number;
-	originalUrl: string;
-	shortCode: string;
-	shortUrl: string;
-	clicks: number;
-	createdAt: string;
-};
+import { useLogout } from "@/lib/hooks/use-logout";
+import { useUrls } from "@/lib/hooks/use-urls";
+import { useUser } from "@/lib/hooks/use-user";
 
 export default function DashboardPage() {
 	const router = useRouter();
-	const [user, setUser] = useState<User | null>(null);
-	const [urls, setUrls] = useState<Url[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
 
-	useEffect(() => {
-		async function fetchData() {
-			try {
-				const userResponse = await fetch("/api/auth/me");
-				if (!userResponse.ok) {
-					router.push("/login");
-					return;
-				}
-				const userData = await userResponse.json();
-				setUser(userData.user);
+	const { data: user, isLoading: userLoading } = useUser();
+	const { data: urls = [], isLoading: urlsLoading, refetch } = useUrls();
+	const logout = useLogout();
 
-				const urlsResponse = await fetch("/api/urls");
-				if (urlsResponse.ok) {
-					const urlsData = await urlsResponse.json();
-					setUrls(urlsData.urls);
-				}
-			} catch (error) {
-				console.error("Erro ao buscar dados:", error);
-				toast.error("Erro ao carregar dados");
-			} finally {
-				setIsLoading(false);
-			}
-		}
+	const handleLogout = () => {
+		logout.mutate();
+	};
 
-		fetchData();
-	}, [router]);
-
-	const handleLogout = async () => {
-		try {
-			const response = await fetch("/api/auth/logout", {
-				method: "POST",
-			});
-
-			if (response.ok) {
-				toast.success("Logout realizado!");
-				router.push("/login");
-			}
-		} catch (error) {
-			console.error("Erro no logout:", error);
-			toast.error("Erro ao fazer logout");
-		}
+	const handleOpenUrl = async (shortUrl: string) => {
+		window.open(shortUrl, "_blank");
+		await new Promise((resolve) => setTimeout(resolve, 1000));
+		refetch();
+		toast.success("Abrindo URL...");
 	};
 
 	const copyToClipboard = (text: string) => {
 		navigator.clipboard.writeText(text);
 		toast.success("Copiado!");
 	};
+
+	const isLoading = userLoading || urlsLoading;
 
 	if (isLoading) {
 		return (
@@ -108,8 +64,12 @@ export default function DashboardPage() {
 						<Button onClick={() => router.push("/dashboard/urls/new")}>
 							+ Nova URL
 						</Button>
-						<Button variant="outline" onClick={handleLogout}>
-							Sair
+						<Button
+							variant="outline"
+							onClick={handleLogout}
+							disabled={logout.isPending}
+						>
+							{logout.isPending ? "Saindo..." : "Sair"}
 						</Button>
 					</div>
 				</div>
@@ -194,7 +154,7 @@ export default function DashboardPage() {
 												<Button
 													size="sm"
 													variant="outline"
-													onClick={() => window.open(url.shortUrl, "_blank")}
+													onClick={() => handleOpenUrl(url.shortUrl)}
 												>
 													Abrir
 												</Button>

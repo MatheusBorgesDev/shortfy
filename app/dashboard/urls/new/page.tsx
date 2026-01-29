@@ -16,15 +16,22 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCreateUrl } from "@/lib/hooks/use-create-url";
 import { type CreateUrlData, createUrlSchema } from "@/lib/validations/auth";
 
 export default function NewUrlPage() {
 	const router = useRouter();
-	const [isLoading, setIsLoading] = useState(false);
 	const [createdUrl, setCreatedUrl] = useState<{
 		shortUrl: string;
 		shortCode: string;
 	} | null>(null);
+
+	const { mutate: createUrl, isPending } = useCreateUrl((url) => {
+		setCreatedUrl({
+			shortUrl: url.shortUrl,
+			shortCode: url.shortCode,
+		});
+	});
 
 	const {
 		register,
@@ -35,36 +42,9 @@ export default function NewUrlPage() {
 		resolver: zodResolver(createUrlSchema),
 	});
 
-	const onSubmit = async (data: CreateUrlData) => {
-		setIsLoading(true);
-		setCreatedUrl(null);
-
-		try {
-			const response = await fetch("/api/urls", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
-			});
-
-			const result = await response.json();
-
-			if (!response.ok) {
-				toast.error(result.message || "Erro ao criar URL");
-				return;
-			}
-
-			toast.success("URL criada com sucesso!");
-			setCreatedUrl({
-				shortUrl: result.url.shortUrl,
-				shortCode: result.url.shortCode,
-			});
-			reset();
-		} catch (error) {
-			console.error("Erro ao criar URL:", error);
-			toast.error("Erro ao conectar com o servidor");
-		} finally {
-			setIsLoading(false);
-		}
+	const onSubmit = (data: CreateUrlData) => {
+		createUrl(data);
+		reset();
 	};
 
 	const copyToClipboard = (text: string) => {
@@ -96,10 +76,10 @@ export default function NewUrlPage() {
 								<Label htmlFor="originalUrl">URL</Label>
 								<Input
 									id="originalUrl"
-									type="url"
+									type="string"
 									placeholder="https://exemplo.com/minha-url-muito-longa"
 									{...register("originalUrl")}
-									disabled={isLoading}
+									disabled={isPending}
 									className={errors.originalUrl ? "border-red-500" : ""}
 								/>
 								{errors.originalUrl && (
@@ -109,8 +89,8 @@ export default function NewUrlPage() {
 								)}
 							</div>
 
-							<Button type="submit" className="w-full" disabled={isLoading}>
-								{isLoading ? "Criando..." : "Encurtar URL"}
+							<Button type="submit" className="w-full" disabled={isPending}>
+								{isPending ? "Criando..." : "Encurtar URL"}
 							</Button>
 						</form>
 					</CardContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { UrlCard } from "@/components/url-card";
 import { useLogout } from "@/lib/hooks/use-logout";
 import { useUrls } from "@/lib/hooks/use-urls";
 import { useUser } from "@/lib/hooks/use-user";
@@ -22,21 +24,40 @@ export default function DashboardPage() {
 	const { data: urls = [], isLoading: urlsLoading, refetch } = useUrls();
 	const logout = useLogout();
 
-	const handleLogout = () => {
+	const stats = useMemo(() => {
+		const totalUrls = urls.length;
+		const totalClicks = urls.reduce((acc, url) => acc + url.clicks, 0);
+
+		return { totalUrls, totalClicks };
+	}, [urls]);
+
+	const memberSince = useMemo(() => {
+		if (!user) return "";
+		return new Date(user.createdAt).toLocaleDateString("pt-BR");
+	}, [user]);
+
+	const handleLogout = useCallback(() => {
 		logout.mutate();
-	};
+	}, [logout]);
 
-	const handleOpenUrl = async (shortUrl: string) => {
-		window.open(shortUrl, "_blank");
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-		refetch();
-		toast.success("Abrindo URL...");
-	};
+	const handleOpenUrl = useCallback(
+		async (shortUrl: string) => {
+			window.open(shortUrl, "_blank");
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			refetch();
+			toast.success("Abrindo URL...");
+		},
+		[refetch],
+	);
 
-	const copyToClipboard = (text: string) => {
+	const copyToClipboard = useCallback((text: string) => {
 		navigator.clipboard.writeText(text);
 		toast.success("Copiado!");
-	};
+	}, []);
+
+	const handleCreateNew = useCallback(() => {
+		router.push("/dashboard/urls/new");
+	}, [router]);
 
 	const isLoading = userLoading || urlsLoading;
 
@@ -61,9 +82,7 @@ export default function DashboardPage() {
 						<p className="text-slate-600">Bem-vindo, {user.userName}!</p>
 					</div>
 					<div className="flex gap-2">
-						<Button onClick={() => router.push("/dashboard/urls/new")}>
-							+ Nova URL
-						</Button>
+						<Button onClick={handleCreateNew}>+ Nova URL</Button>
 						<Button
 							variant="outline"
 							onClick={handleLogout}
@@ -78,23 +97,19 @@ export default function DashboardPage() {
 					<Card>
 						<CardHeader className="pb-2">
 							<CardDescription>Total de URLs</CardDescription>
-							<CardTitle className="text-4xl">{urls.length}</CardTitle>
+							<CardTitle className="text-4xl">{stats.totalUrls}</CardTitle>
 						</CardHeader>
 					</Card>
 					<Card>
 						<CardHeader className="pb-2">
 							<CardDescription>Total de Cliques</CardDescription>
-							<CardTitle className="text-4xl">
-								{urls.reduce((acc, url) => acc + url.clicks, 0)}
-							</CardTitle>
+							<CardTitle className="text-4xl">{stats.totalClicks}</CardTitle>
 						</CardHeader>
 					</Card>
 					<Card>
 						<CardHeader className="pb-2">
 							<CardDescription>Membro desde</CardDescription>
-							<CardTitle className="text-2xl">
-								{new Date(user.createdAt).toLocaleDateString("pt-BR")}
-							</CardTitle>
+							<CardTitle className="text-2xl">{memberSince}</CardTitle>
 						</CardHeader>
 					</Card>
 				</div>
@@ -114,53 +129,17 @@ export default function DashboardPage() {
 								<p className="text-slate-600 mb-4">
 									Crie sua primeira URL encurtada!
 								</p>
-								<Button onClick={() => router.push("/dashboard/urls/new")}>
-									+ Criar URL
-								</Button>
+								<Button onClick={handleCreateNew}>+ Criar URL</Button>
 							</div>
 						) : (
 							<div className="space-y-4">
 								{urls.map((url) => (
-									<div
+									<UrlCard
 										key={url.id}
-										className="p-4 border rounded-lg hover:bg-slate-50 transition"
-									>
-										<div className="flex items-start justify-between gap-4">
-											<div className="flex-1 min-w-0">
-												<p className="text-sm font-medium text-slate-900 truncate">
-													{url.shortUrl}
-												</p>
-												<p className="text-sm text-slate-500 truncate">
-													{url.originalUrl}
-												</p>
-												<div className="flex gap-4 mt-2 text-xs text-slate-500">
-													<span>👆 {url.clicks} cliques</span>
-													<span>
-														📅{" "}
-														{new Date(url.createdAt).toLocaleDateString(
-															"pt-BR",
-														)}
-													</span>
-												</div>
-											</div>
-											<div className="flex gap-2">
-												<Button
-													size="sm"
-													variant="outline"
-													onClick={() => copyToClipboard(url.shortUrl)}
-												>
-													Copiar
-												</Button>
-												<Button
-													size="sm"
-													variant="outline"
-													onClick={() => handleOpenUrl(url.shortUrl)}
-												>
-													Abrir
-												</Button>
-											</div>
-										</div>
-									</div>
+										url={url}
+										onCopy={copyToClipboard}
+										onOpen={handleOpenUrl}
+									/>
 								))}
 							</div>
 						)}

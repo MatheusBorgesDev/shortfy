@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
@@ -26,12 +26,14 @@ export default function NewUrlPage() {
 		shortCode: string;
 	} | null>(null);
 
-	const { mutate: createUrl, isPending } = useCreateUrl((url) => {
-		setCreatedUrl({
-			shortUrl: url.shortUrl,
-			shortCode: url.shortCode,
-		});
-	});
+	const onSuccess = useCallback(
+		(url: { shortUrl: string; shortCode: string }) => {
+			setCreatedUrl(url);
+		},
+		[],
+	);
+
+	const { mutate: createUrl, isPending } = useCreateUrl(onSuccess);
 
 	const {
 		register,
@@ -42,15 +44,32 @@ export default function NewUrlPage() {
 		resolver: zodResolver(createUrlSchema),
 	});
 
-	const onSubmit = (data: CreateUrlData) => {
-		createUrl(data);
-		reset();
-	};
+	const onSubmit = useCallback(
+		(data: CreateUrlData) => {
+			createUrl(data);
+			reset();
+		},
+		[createUrl, reset],
+	);
 
-	const copyToClipboard = (text: string) => {
+	const copyToClipboard = useCallback((text: string) => {
 		navigator.clipboard.writeText(text);
 		toast.success("Copiado para área de transferência!");
-	};
+	}, []);
+
+	const handleBack = useCallback(() => {
+		router.push("/dashboard");
+	}, [router]);
+
+	const handleTestUrl = useCallback(() => {
+		if (createdUrl) {
+			window.open(createdUrl.shortUrl, "_blank");
+		}
+	}, [createdUrl]);
+
+	const handleViewUrls = useCallback(() => {
+		router.push("/dashboard");
+	}, [router]);
 
 	return (
 		<div className="min-h-screen bg-slate-50 p-8">
@@ -60,7 +79,7 @@ export default function NewUrlPage() {
 						<h1 className="text-3xl font-bold">Criar Nova URL</h1>
 						<p className="text-slate-600">Encurte sua URL em segundos</p>
 					</div>
-					<Button variant="outline" onClick={() => router.push("/dashboard")}>
+					<Button variant="outline" onClick={handleBack}>
 						Voltar
 					</Button>
 				</div>
@@ -126,16 +145,13 @@ export default function NewUrlPage() {
 
 							<div className="flex gap-2">
 								<Button
-									onClick={() => window.open(createdUrl.shortUrl, "_blank")}
+									onClick={handleTestUrl}
 									variant="outline"
 									className="flex-1"
 								>
 									Testar URL
 								</Button>
-								<Button
-									onClick={() => router.push("/dashboard")}
-									className="flex-1"
-								>
+								<Button onClick={handleViewUrls} className="flex-1">
 									Ver Minhas URLs
 								</Button>
 							</div>

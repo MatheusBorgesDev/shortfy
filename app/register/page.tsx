@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -86,7 +87,6 @@ export default function RegisterPage() {
 							)}
 						</div>
 
-						{/* Campo Email */}
 						<div className="space-y-2">
 							<Label htmlFor="email">Email</Label>
 							<Input
@@ -101,7 +101,6 @@ export default function RegisterPage() {
 							)}
 						</div>
 
-						{/* Campo Senha */}
 						<div className="space-y-2">
 							<Label htmlFor="password">Senha</Label>
 							<Input
@@ -126,9 +125,9 @@ export default function RegisterPage() {
 
 						<p className="text-sm text-center text-slate-600">
 							Já tem uma conta?{" "}
-							<a href="/login" className="text-primary hover:underline">
+							<Link href="/login" className="text-primary hover:underline">
 								Faça login
-							</a>
+							</Link>
 						</p>
 					</CardFooter>
 				</form>

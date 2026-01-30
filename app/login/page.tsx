@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,7 +17,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { type LoginFormData, loginSchema } from "@/lib/validations/auth";
 
 export default function LoginPage() {
@@ -109,9 +109,9 @@ export default function LoginPage() {
 
 						<p className="text-sm text-center text-slate-600">
 							Não tem uma conta?{" "}
-							<a href="/register" className="text-primary hover:underline">
+							<Link href="/register" className="text-primary hover:underline">
 								Cadastre-se
-							</a>
+							</Link>
 						</p>
 					</CardFooter>
 				</form>

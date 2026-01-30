@@ -122,7 +122,6 @@ pnpm prisma:studio    # Interface visual do banco
 ```bash
 pnpm test             # Roda testes (watch mode)
 pnpm test:ui          # Interface visual de testes
-pnpm test:coverage    # Relatório de cobertura
 ```
 
 ### **Performance**

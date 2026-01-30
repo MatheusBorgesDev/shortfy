@@ -21,7 +21,10 @@ export async function POST(request: Request) {
 
 		if (!existingUser) {
 			return NextResponse.json(
-				{ message: "Invalid credentials" },
+				{
+					message:
+						"Usuário não encontrado. Verifique seu e-mail ou faça seu cadastro!",
+				},
 				{ status: 401 },
 			);
 		}
@@ -33,7 +36,7 @@ export async function POST(request: Request) {
 
 		if (!isPasswordValid) {
 			return NextResponse.json(
-				{ message: "Invalid credentials" },
+				{ message: "Credenciais inválidas. Verifique seu e-mail e senha!" },
 				{ status: 401 },
 			);
 		}

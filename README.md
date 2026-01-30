@@ -123,13 +123,6 @@ pnpm prisma:studio    # Interface visual do banco
 pnpm test             # Roda testes (watch mode)
 pnpm test:ui          # Interface visual de testes
 ```
-
-### **Performance**
-```bash
-pnpm analyze          # Análise de bundle size
-pnpm lighthouse       # Auditoria de performance
-```
-
 ---
 
 ## 🗄️ Estrutura do Banco de Dados

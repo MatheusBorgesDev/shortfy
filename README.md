@@ -165,8 +165,6 @@ model Url {
 ### **Performance**
 - Memoização com `useMemo` e `useCallback`
 - Componentes otimizados com `React.memo`
-- Bundle analyzer configurado
-- Output standalone para Docker
 
 ### **Testes**
 - Cobertura de componentes críticos
@@ -185,18 +183,6 @@ Este projeto foi desenvolvido com foco em **aprendizado de práticas modernas**:
 - ✅ Autenticação JWT
 - ✅ ORM com Prisma
 - ✅ Type-safe com TypeScript + Zod
-
----
-
-## 🔮 Roadmap
-
-- [ ] Docker Compose completo (app + db)
-- [ ] Editar/deletar URLs
-- [ ] QR Code para URLs
-- [ ] Analytics avançado com gráficos
-- [ ] Customização de shortCode
-- [ ] Dark mode
-- [ ] Deploy (Vercel + Supabase)
 
 ---
 
